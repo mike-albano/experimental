@@ -15,4 +15,4 @@ changed_values = remap(config_json, visit=change_val)
 drop_keys = lambda path, key, value: key not in bad_keys
 clean = remap(changed_values, visit=drop_keys)
 
-print(json.dumps(clean, indent=2))
+print(json.dumps(clean, indent=2))  # Dump to stdout.

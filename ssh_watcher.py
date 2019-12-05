@@ -21,6 +21,7 @@ import argparse
 import time
 import datetime
 import io
+# from twilio.rest import Client  # Uncomment if sendig txt msg via Twilio
 
 try:  # Make sure pexpect installed.
   import pexpect
@@ -163,6 +164,9 @@ def _take_action(parsed_output, filename, creds, host, port):
     cmd_output = ssh_to(creds, host, port, 'show log security all')
     outfile.write(cmd_output)
     outfile.close()
+    # Uncomment to send a txt via Twilio
+    # client = Client('your_account_sid', 'your_auth_token')
+    # client.messages.create(to='<your_phone#', from_='twilio_#', body='your_msg')
     sys.exit()
 
 

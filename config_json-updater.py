@@ -11,8 +11,6 @@ import sys
 # Change values in each of the files in a directory
 directory = sys.argv[1]  # Make sure to add a trailing "/" when running.
 
-# If you'd rather use one file, uncomment the following
-#config_json = json.load(open(sys.argv[1], 'r'))
 bad_keys = ['dot11r-method']
 
 def change_val(path, key, value):

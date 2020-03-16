@@ -9,6 +9,8 @@ import requests
 import sys
 
 
+if len(sys.argv) < 2:
+  print('USAGE:\npython corona_tracker.py <your_state_here>')
 my_state = sys.argv[1]
 
 def get_data(my_state):

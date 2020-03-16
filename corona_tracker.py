@@ -37,7 +37,7 @@ if __name__ == '__main__':
   initial_num = state_data['positive']
   print('The starting number of positive cases is %i: ' % initial_num)
   while True:
-    time.sleep(10)  # Perform the check every 60s
+    time.sleep(60)  # Perform the check every 60s
     state_data = get_data(my_state.upper())  # Argument passed in.
     parse_data(state_data, initial_num)
     initial_num = state_data['positive']  # Set new initial number.

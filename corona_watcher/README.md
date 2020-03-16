@@ -9,7 +9,7 @@ Stick a sound file and uncomment the following line, if you also want to play a 
 ```
 Line 32: # os.popen('open sound.mp3')
 ```
-Default is to perform the GET every 5 minutes; feel free to change the following to increase/decrease that:
+Default is to perform the GET every 1 minute; feel free to change the following to increase/decrease that:
 ```
 Line 43: time.sleep(60)  # Perform the check every 60s
 ```

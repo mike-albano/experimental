@@ -4,13 +4,14 @@ cases increases in your state.
 
 import datetime
 import json
+import os
 import time
 import requests
 import sys
 
 
 if len(sys.argv) < 2:
-  print('USAGE:\npython corona_tracker.py <your_state_here>')
+  print('USAGE:\npython corona_tracker.py <state_code_here>')
 my_state = sys.argv[1]
 
 def get_data(my_state):
@@ -27,6 +28,8 @@ def parse_data(state_data, initial_num):
     print('Increase in positive cases.\nOld num: %i\nNew number: %i'
           % (initial_num, new_num))
     print('Number of deaths: %i' % state_data['death'])
+    # Comment in this line to play a souond (Works on OSX only)
+    # os.popen('open sound.mp3')
   else:
     print('No change as of: %s. The current number is still %i'
           % (datetime.datetime.now().strftime("%D:%H:%M:%S"), initial_num))

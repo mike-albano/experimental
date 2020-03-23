@@ -1,0 +1,397 @@
+module arista-wifi-augments {
+  yang-version "1";
+  namespace "http://arista.com/yang/openconfig/wifi/augments";
+  prefix "arista-wifi-augments";
+
+  // imports
+  import openconfig-access-points { prefix oc-access-points; }
+  import openconfig-yang-types { prefix oc-yang; }
+  import openconfig-messages { prefix oc-messages; }
+  import openconfig-vlan-types { prefix oc-vlan-types; }
+
+  // meta
+  organization
+    "Arista Networks, Inc.";
+
+  contact
+    "Arista Networks, Inc.
+     Product Support";
+
+  description
+    "This module contains OpenConfig augments for Arista WiFi Access Point.
+
+     Copyright (c) 2019 Arista Networks, Inc. All rights reserved.";
+
+  revision 2019-11-25 {
+    description
+      "Augment system messages model to include Arista debug service for hostapd, sensord, and wl_evt_handler.";
+  }
+
+  revision 2019-06-28 {
+    description
+      "Augment wifi model to include Arista AP configuration.";
+  }
+  augment "/oc-access-points:access-points/oc-access-points:access-point/oc-access-points:ssids/oc-access-points:ssid/oc-access-points:config" {
+    description "Adds SSID config augments to the WiFi mac model";
+
+    leaf remote-bridging {
+      type boolean;
+      default false;
+      description "Whether remote bridging is enabled or disabled, default is disabled";
+    }
+
+    leaf tunnel-name {
+      type string;
+      description "Name of the tunnel profile mapped to this SSID";
+    }
+  }
+
+  augment "/oc-access-points:access-points/oc-access-points:access-point/oc-access-points:ssids/oc-access-points:ssid/oc-access-points:state" {
+    description "Adds SSID state augments to the WiFi mac model";
+
+    leaf remote-bridging {
+      type boolean;
+      default false;
+      description "Whether remote bridging is enabled or disabled, default is disabled";
+    }
+
+    leaf tunnel-name {
+      type string;
+      description "Name of the tunnel profile mapped to this SSID";
+    }
+  }
+
+
+  identity HOSTAPD {
+    base oc-messages:DEBUG_SERVICE;
+    description
+      "Hostapd debug service.";
+  }
+
+  identity SENSORD {
+    base oc-messages:DEBUG_SERVICE;
+    description
+      "Sensord debug service.";
+  }
+
+  identity WLEVTHANDLER {
+    base oc-messages:DEBUG_SERVICE;
+    description
+      "Wl_evt_handler debug service.";
+  }
+
+  identity ipsec_proto {
+    description "Base type for ESP or AH protocol";
+  }
+
+  identity IPSEC_PROTO_ESP {
+    base ipsec_proto;
+    description "ESP proto";
+  }
+
+  identity IPSEC_PROTO_AH {
+    base ipsec_proto;
+    description "AH proto";
+  }
+
+  identity ipsec_mode {
+    description
+      "Base type for ipsec tunnel/transport mode values";
+  }
+
+  identity IPSEC_MODE_TUNNEL {
+    base ipsec_mode;
+    description "IPSec tunnel mode";
+  }
+
+  identity IPSEC_MODE_TRANSPORT {
+    base ipsec_mode;
+    description "IPSec transport mode";
+  }
+
+  identity tunnel_type {
+    description "Whether tunnel is EoGRE, VxLAN or EoGRE over IPSec";
+  }
+
+  identity TUNNEL_TYPE_EOGRE {
+    base tunnel_type;
+    description "Plain EoGRE type";
+  }
+
+  identity TUNNEL_TYPE_VXLAN {
+    base tunnel_type;
+    description "VxLAN tunnel";
+  }
+
+  identity TUNNEL_TYPE_EOGRE_IPSEC {
+    base tunnel_type;
+    description "EoGRE over IPSec";
+  }
+
+  grouping arista-ap-system-config {
+    description
+      "Configuration for Arista AP System specific parameters";
+
+    leaf mac {
+      type oc-yang:mac-address;
+      description
+        "MAC address of the AP primary Ethernet interface. If AP
+        has multiple Ethernet interfaces, this would be the MAC printed
+        on the unit label and referenced within the management system.
+        Vendors MUST reject attempts to configure this leaf.";
+    }
+
+    leaf spectratalk-pmk {
+      type string;
+      default "";
+      description
+        "PMK used for AP and cloud server communication in Spectratalk protocol";
+    }
+  }
+
+  grouping arista-ap-tunnel-endpoint {
+    description
+      "Tunnel endpoint configuration";
+    leaf address {
+      type string;
+      description
+        "Hostname/IP address of the tunnel endpoint";
+    }
+
+    leaf local-vlan {
+      type oc-vlan-types:vlan-id;
+      description
+        "Local vlan used to route tunnel traffic. Default is 0 (untagged)";
+    }
+
+    leaf mss_clamping {
+      type boolean;
+      description "Enable/Disable MSS clamping";
+    }
+
+    leaf pmtu {
+      type uint16;
+      description "PMTU value. AP tries to discover the value automatically if set to 0";
+    }
+
+    container ipsec-config {
+      description "IPSec configuration";
+
+      uses arista-ap-ipsec-config;
+    }
+  }
+
+  grouping arista-ap-ipsec-config {
+    description
+      "IPSec configuration";
+    leaf mode {
+      type identityref {
+        base ipsec_mode;
+      }
+      description "IPSec mode tunnel or transport";
+    }
+
+    leaf tunnel-remote-endpoint {
+      type string;
+      description "IPSec remote endpoint address for tunnel mode";
+    }
+
+    container ike-config {
+      description "IKE configuration";
+
+      leaf keepalive {
+        type uint32;
+        units seconds;
+        description "Lifetime / IKE keepalive";
+      }
+
+      leaf version {
+        type uint16;
+        description "IKE version v1 / v2";
+      }
+
+      leaf ikev1-aggressive-neg-mode {
+        type boolean;
+        description "IKEv1 aggressive negotiation mode enable / disable";
+      }
+
+      leaf ap-identifier {
+        type string;
+        description "AP (left) Identifier";
+      }
+
+      leaf ap-psk {
+        type string;
+        description "AP (left) PSK";
+      }
+
+      leaf remote-identifier {
+        type string;
+        description "Remote (right) Identifier";
+      }
+
+      leaf remote-psk {
+        type string;
+        description "Remote (right) PSK";
+      }
+
+      leaf-list phase1-cipher {
+        type string;
+        description "Phase-1 cipher, hash and DH group. Format: enc-len-hash_len-dhgroup (E.g. aes-256-sha2_512-modp8192)";
+      }
+    }
+
+    container phase2-config {
+      leaf keepalive {
+        type uint32;
+        units seconds;
+        description "IPSec phase-2 lifetime / keepalive timeout";
+      }
+
+      leaf protocol {
+        type identityref {
+          base ipsec_proto;
+        }
+        description "Specify ESP or AH protocol to use";
+      }
+
+      leaf-list cipher {
+        type string;
+        description "Phase-2 cipher, hash and DH group. Format: enc-len-hash_len-dhgroup (E.g. aes-256-sha2_512-modp8192)";
+      }
+    }
+  }
+
+  grouping arista-ap-tunnel-config {
+    description "Tunnel configuration";
+
+    leaf name {
+      type string;
+      description "Name used as reference for the tunnel config";
+    }
+
+    leaf tunnel-type {
+      type identityref {
+        base tunnel_type;
+      }
+      description "Whether the tunnel is a EoGRE, EoGRE over IPSec or VxLAN tunnel";
+    }
+
+    container primary-endpoint {
+      description "Primary tunnel endpoint address";
+
+      uses arista-ap-tunnel-endpoint;
+    }
+
+    container secondary-endpoint {
+      description "Secondary tunnel endpoint address";
+
+      uses arista-ap-tunnel-endpoint;
+    }
+
+    leaf prefer-primary {
+      description "Swtich to primary as soon as it is available";
+
+      type boolean;
+    }
+
+    leaf probe-interval {
+      description "Frequency of probe packets";
+
+      type uint32;
+      units seconds;
+    }
+
+    leaf probe-retries {
+      description "Number of retries for each probe";
+
+      type uint16;
+    }
+
+    leaf probe-timeout {
+      description "Probe timeout";
+
+      type uint32;
+      units seconds;
+    }
+
+  }
+
+  grouping arista-ap-tunnel-top {
+    description "Arista AP tunnel configuration and state";
+    container tunnels {
+      description "Tunnel profiles";
+      list tunnel {
+        key "name";
+
+        leaf name {
+          type leafref {
+            path "../config/name";
+          }
+        }
+
+        container config {
+          description "Tunnel configuration";
+
+          uses arista-ap-tunnel-config;
+        }
+
+        container state {
+          config false;
+          description "Tunnel state";
+
+          uses arista-ap-tunnel-config;
+        }
+      }
+    }
+  }
+
+  grouping arista-aps-top {
+    description
+      "Top-level grouping for configuring Arista specific parameters on AP";
+
+    container arista-aps {
+      description
+        "Top most container for configuring Arista specific parameters on AP";
+
+      list arista-ap {
+        key "mac";
+        description
+          "List of MAC addresses that will have Arista specific parameters configured.";
+
+        leaf mac {
+          type leafref {
+            path "../system/config/mac";
+          }
+          description
+            "Reference to the MAC address list key. This leaf is a reference
+            only and not to be configured.";
+        }
+
+        container system {
+          description
+            "Container for Arista system specific parameters";
+
+          container config {
+            description
+              "Config container for configuring Arista system specific parameters on APs.";
+
+            uses arista-ap-system-config;
+          }
+
+          container state {
+            config false;
+            description
+              "State container for configuring Arista system specific parameters on APs.";
+
+            uses arista-ap-system-config;
+          }
+        }
+
+        uses arista-ap-tunnel-top;
+      }
+    }
+  }
+
+  uses arista-aps-top;
+}

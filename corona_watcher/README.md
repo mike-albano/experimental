@@ -1,4 +1,6 @@
-Does an HTTP GET using Python Requests (pip3 install requests).
+Does an HTTP GET using Python Requests, plays a sound depending on result.
+
+pip3 install -r requirements.txt
 
 Usage example, for state of Colorado:
 ```

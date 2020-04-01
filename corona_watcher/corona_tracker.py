@@ -15,8 +15,7 @@ urllib3.disable_warnings()  # Don't care much for cert validity here.
 
 
 OFF_HOURS = ['23', '00', '01', '02', '03', '04', '05', '06', '07', '08']
-#API_INTERVAL = 3600
-API_INTERVAL = 60
+API_INTERVAL = 3660
 
 # (TODO): Replace with argparse
 if len(sys.argv) < 2:
@@ -142,9 +141,17 @@ def parse_data():
                      country_obj.death_delta, '3')
       playsound('3.mp3')
 
+  if country_obj.pos_delta > 0:
+    print('Increase in cases in your country by %i' % country_obj.pos_delta)
+    # Comment out this line to disable sound playing.
+    if datetime.datetime.now().strftime("%H") not in OFF_HOURS:
+      text_to_speech('Increase of %i more cases in your country.' %
+                     country_obj.pos_delta, '4')
+      playsound('4.mp3')
+
   print('As of %s, the current country totals are:\n%i positve \n%i deaths'
-          % (datetime.datetime.now().strftime("%D:%H:%M:%S"), country_obj.new_pos,
-             country_obj.new_deaths))
+          % (datetime.datetime.now().strftime("%D:%H:%M:%S"),
+             country_obj.new_pos, country_obj.new_death))
 
   # TODO: Clean up all temp MP3 files.
 def get_data(initial):

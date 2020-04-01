@@ -15,12 +15,14 @@ urllib3.disable_warnings()  # Don't care much for cert validity here.
 
 
 OFF_HOURS = ['23', '00', '01', '02', '03', '04', '05', '06', '07', '08']
+#API_INTERVAL = 3600
+API_INTERVAL = 60
 
 # (TODO): Replace with argparse
 if len(sys.argv) < 2:
-  print('USAGE:\npython corona_tracker.py <state_code_here> <country_code_here')
-my_state = sys.argv[1]  # Two letter state code (eg CO)
-my_country = sys.argv[2]  # Three letter country designation (eg USA)
+  print('USAGE:\npython corona_tracker.py <2-letter state_code_here> <3-letter country_code_here')
+my_state = sys.argv[1].upper()  # Two letter state code (eg CO)
+my_country = sys.argv[2].upper()  # Three letter country designation (eg USA)
 
 class StatsObject(object):
   """ Represents a stats objects for storing data results.
@@ -86,7 +88,7 @@ def get_world_data():
     try:
       raw_data = json.loads(requests.request('GET', url, verify=False).text)
     except:
-      print('API Get for country-data failed.')
+      print('API Get for world-data failed.')
       pass
       time.sleep(5)  # If HTTP Request fails, wait 5s and try again.
 
@@ -126,7 +128,7 @@ def parse_data():
                      state_obj.death_delta, '2')
       playsound('2.mp3')
 
-  print('As of %s, the current totals are:\n%i positve'
+  print('As of %s, the current state totals are:\n%i positve'
           '\n%i negative\n%i deaths'
           % (datetime.datetime.now().strftime("%D:%H:%M:%S"), state_obj.new_pos,
              state_obj.new_neg, state_obj.new_death))
@@ -140,6 +142,10 @@ def parse_data():
                      country_obj.death_delta, '3')
       playsound('3.mp3')
 
+  print('As of %s, the current country totals are:\n%i positve \n%i deaths'
+          % (datetime.datetime.now().strftime("%D:%H:%M:%S"), country_obj.new_pos,
+             country_obj.new_deaths))
+
   # TODO: Clean up all temp MP3 files.
 def get_data(initial):
   """Get initial data points from APIs.
@@ -152,10 +158,6 @@ def get_data(initial):
   """
   state_data = get_state_data(my_state.upper())  # Argument passed in.
   world_data = get_world_data()
-  print(next(cases['cases'] for cases in world_data['data'] if cases['country'] == 'USA'))
-  sys.exit()
-  #country_data = world_data['data'][0]['country'] == my_cc.upper():
-  #print(country_data)
   if initial:
     state_obj.initial_pos = state_data['positive']
     state_obj.initial_neg = state_data['negative']
@@ -163,15 +165,15 @@ def get_data(initial):
     country_obj.initial_pos = next(cases['cases'] for cases in world_data['data']
                                    if cases['country'] == my_country)
     country_obj.initial_death = next(deaths['deaths'] for deaths in world_data['data']
-                                   if cases['country'] == my_country)
+                                   if deaths['country'] == my_country)
   else:
     state_obj.new_pos = state_data['positive']
     state_obj.new_neg = state_data['negative']
     state_obj.new_death = state_data['death']
     country_obj.new_pos = next(cases['cases'] for cases in world_data['data']
                                    if cases['country'] == my_country)
-    country_obj.new_death = next(cases['cases'] for cases in world_data['data']
-                                   if cases['country'] == my_country)
+    country_obj.new_death = next(deaths['deaths'] for deaths in world_data['data']
+                                   if deaths['country'] == my_country)
 
 
 if __name__ == '__main__':
@@ -180,11 +182,9 @@ if __name__ == '__main__':
   country_obj = StatsObject('country_data')
   world_obj = StatsObject('world_data')
   get_data(True)  # Get initial data points.
-  print('Starting number of positive cases is: %i' % state_obj.initial_pos)
-  print('Starting number of negative cases is: %i' % state_obj.initial_neg)
-  print('Starting number of deaths is: %i' % state_obj.initial_death)
+  print('Initial data gathered. Now waiting %s for next check.' % API_INTERVAL)
   while True:
-    time.sleep(3600)  # Perform the check every hour.
+    time.sleep(API_INTERVAL)  # Perform the check every hour.
     get_data(False)  # Get new data points.
     state_obj.last_check = time.time()
     parse_data()

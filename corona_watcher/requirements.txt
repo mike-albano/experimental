@@ -1,4 +1,0 @@
-gTTs
-playsound
-# If on OSX
-# PyObjC

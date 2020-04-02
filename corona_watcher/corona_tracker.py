@@ -2,6 +2,7 @@
 cases increases in your country & state.
 """
 
+import argparse
 import datetime
 import json
 import os
@@ -17,11 +18,29 @@ urllib3.disable_warnings()  # Don't care much for cert validity here.
 OFF_HOURS = ['23', '00', '01', '02', '03', '04', '05', '06', '07', '08']
 API_INTERVAL = 3660
 
-# (TODO): Replace with argparse
-if len(sys.argv) < 2:
-  print('USAGE:\npython corona_tracker.py <2-letter state_code_here> <3-letter country_code_here')
-my_state = sys.argv[1].upper()  # Two letter state code (eg CO)
-my_country = sys.argv[2].upper()  # Three letter country designation (eg USA)
+def _create_parser():
+  """Create parser for arguments passed into the program from the CLI.
+  Returns:
+    Argparse object.
+  """
+  parser = argparse.ArgumentParser(description='Track Corona Virus data for your'
+                                   'state, country and county')
+  parser = argparse.ArgumentParser(formatter_class=argparse.
+                                   RawDescriptionHelpFormatter,epilog='Use this'
+                                   ' to track corona stats and print them'
+                                   'out, in addition to dictating stats of interest'
+                                   'at a preset interval (deault=1hr)\n'
+                                   'EXAMPLE\n'
+                                   'python3 corona_tracker.py co usa Boulder')
+  parser.add_argument('-s', '--state', type=str, help='Two letter code'
+                      ' for your state (Eg NY, CA, etc.)', required=True)
+  parser.add_argument('-c', '--country', type=str, help='Three letter code for your '
+                         'country (eg USA)', required=True)
+  parser.add_argument('-o', '--county', type=str, help='Full name of your County'
+                      '(Eg Boulder, Santa Clara etc.)', required=True)
+
+  return parser
+
 
 class StatsObject(object):
   """ Represents a stats objects for storing data results.
@@ -93,16 +112,31 @@ def get_world_data():
 
   return raw_data
 
+def get_county_data():
+  """Get the raw data from coronavirus-tracker-api.herokuapp.com."""
+  url = ('https://coronavirus-tracker-api.herokuapp.com/v2/locations?source=csbs')
+  raw_data = None
+  while raw_data is None:
+    try:
+      raw_data = json.loads(requests.request('GET', url, verify=False).text)
+    except:
+      print('API Get for county-data failed.')
+      pass
+      time.sleep(5)  # If HTTP Request fails, wait 5s and try again.
+
+  return raw_data
 
 def parse_data():
   """Detrmine if reported cases has increased."""
-  # Parse state data.
+  # Establish deltas between API GETs
   state_obj.pos_delta = state_obj.new_pos - state_obj.initial_pos
   state_obj.neg_delta = state_obj.new_neg - state_obj.initial_neg
   state_obj.death_delta = state_obj.new_death - state_obj.initial_death
-
   country_obj.pos_delta = country_obj.new_pos - country_obj.initial_pos
   country_obj.death_delta = country_obj.new_death - country_obj.initial_death
+  county_obj.pos_delta = county_obj.new_pos - county_obj.initial_pos
+  county_obj.death_delta = county_obj.new_death - county_obj.initial_death
+
   # Process state data.
   if state_obj.pos_delta > 0:
     print('Increase in positive cases in yuor state by %i' % state_obj.pos_delta)
@@ -153,6 +187,29 @@ def parse_data():
           % (datetime.datetime.now().strftime("%D:%H:%M:%S"),
              country_obj.new_pos, country_obj.new_death))
 
+  # Process county data.
+  if county_obj.death_delta > 0:
+    print('Increase in deaths in %s county by %i' % (my_county,
+                                                     county_obj.death_delta))
+    # Comment out this line to disable sound playing.
+    if datetime.datetime.now().strftime("%H") not in OFF_HOURS:
+      text_to_speech('Increase of %i more dead people in %s county.' %
+                     (my_county, country_obj.death_delta), '5')
+      playsound('5.mp3')
+
+  if country_obj.pos_delta > 0:
+    print('Increase in cases in %s county by %i' % (my_county,
+                                                    country_obj.pos_delta))
+    # Comment out this line to disable sound playing.
+    if datetime.datetime.now().strftime("%H") not in OFF_HOURS:
+      text_to_speech('Increase of %i more cases in %s county.' %
+                     (my_county, country_obj.pos_delta), '6')
+      playsound('6.mp3')
+
+  print('As of %s, the current county totals are:\n%i positve \n%i deaths'
+          % (datetime.datetime.now().strftime("%D:%H:%M:%S"),
+             county_obj.new_pos, county_obj.new_death))
+
   # TODO: Clean up all temp MP3 files.
 def get_data(initial):
   """Get initial data points from APIs.
@@ -165,6 +222,7 @@ def get_data(initial):
   """
   state_data = get_state_data(my_state.upper())  # Argument passed in.
   world_data = get_world_data()
+  county_data = get_county_data()
   if initial:
     state_obj.initial_pos = state_data['positive']
     state_obj.initial_neg = state_data['negative']
@@ -173,6 +231,10 @@ def get_data(initial):
                                    if cases['country'] == my_country)
     country_obj.initial_death = next(deaths['deaths'] for deaths in world_data['data']
                                    if deaths['country'] == my_country)
+    county_obj.initial_pos = next(cases['latest']['confirmed'] for cases in
+                                    county_data['locations'] if cases['county'] == my_county)
+    county_obj.initial_death = next(deaths['latest']['deaths'] for deaths in
+                                    county_data['locations'] if deaths['county'] == my_county)
   else:
     state_obj.new_pos = state_data['positive']
     state_obj.new_neg = state_data['negative']
@@ -181,15 +243,26 @@ def get_data(initial):
                                    if cases['country'] == my_country)
     country_obj.new_death = next(deaths['deaths'] for deaths in world_data['data']
                                    if deaths['country'] == my_country)
+    county_obj.new_pos = next(cases['latest']['confirmed'] for cases in
+                                    county_data['locations'] if cases['county'] == my_county)
+    county_obj.new_death = next(deaths['latest']['deaths'] for deaths in
+                                    county_data['locations'] if deaths['county'] == my_county)
 
 
 if __name__ == '__main__':
+  argparser = _create_parser()
+  args = vars(argparser.parse_args())
+  # Assign variables to the arguments provided
+  my_state = args['state'].upper()
+  my_country = args['country'].upper()
+  my_county = args['county'].capitalize()
   # Build objects to store data points.
   state_obj = StatsObject('state_data')
   country_obj = StatsObject('country_data')
   world_obj = StatsObject('world_data')
+  county_obj = StatsObject('county_data')
   get_data(True)  # Get initial data points.
-  print('Initial data gathered. Now waiting %s for next check.' % API_INTERVAL)
+  print('Initial data gathered. Waiting %ss for next check.' % API_INTERVAL)
   while True:
     time.sleep(API_INTERVAL)  # Perform the check every hour.
     get_data(False)  # Get new data points.

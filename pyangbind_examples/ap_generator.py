@@ -69,6 +69,7 @@ def CreateConfigs():
   #ap_conf_phy2G.config.scanning = True
   ## Interface configs
   ap_conf_interface = ap_conf.interfaces.interface.add('Gi0/0')
+  ap_conf_interface.config.name = 'Gi0/0'
   ap_conf_vlan_map = ap_conf_interface.ethernet.switched_vlan.dot1x_vlan_map.vlan_name.add('Corp-VLAN')
   ap_conf_vlan_map.config.vlan_name = 'Corp-VLAN'
   ap_conf_vlan_map.config.id = 260

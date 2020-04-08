@@ -22,7 +22,19 @@ module openconfig-system-management {
     "This module defines configuration and operational state data
     related to management services.";
 
-  oc-ext:openconfig-version "0.1.2";
+  oc-ext:openconfig-version "0.3.0";
+
+  revision "2020-01-14" {
+    description
+      "Add default to enable gRPC transport security";
+    reference "0.3.0";
+  }
+
+  revision "2019-07-10" {
+    description
+      "Add gRPC default port and metadata authentication";
+    reference "0.2.0";
+  }
 
   revision "2018-11-21" {
     description
@@ -74,8 +86,11 @@ module openconfig-system-management {
 
     leaf transport-security {
       type boolean;
+      default true;
       description
-        "Enables gRPC transport security (e.g., TLS or SSL)";
+        "Use gRPC transport security (e.g., TLS or SSL). Enabled by default.
+         This allows disabling transport security for use cases where it is not
+         needed like lab testing.";
     }
 
     leaf certificate-id {

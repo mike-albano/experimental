@@ -3,7 +3,7 @@ Access Points.
 
 Uses Python bindings generated from openconfig-access-points.yang
 With pyang 1.6 & oc-pyang installed:
-pyang --plugindir $PYBINDPLUGIN -f pybind -o access_points_bindings.py ./public/release/models/wifi/access-points/openconfig-access-points.yang -p ./
+pyang --plugindir $PYBINDPLUGIN -f pybind -o access_points_bindings.py ./public/release/models/wifi/access-points/openconfig-access-points.yang public/release/models/wifi/access-points/openconfig-ap-interfaces.yang -p ./public/
 """
 
 import pyangbind.lib.pybindJSON as pybindJSON
@@ -20,7 +20,7 @@ def main():
 def CreateConfigs():
   ap_conf = configs.access_points.access_point.add('link022-pi-ap')
   ## 5GHz Radio
-  ap_conf_phy5G = ap_conf.radios.radio.add(0)
+  ap_conf_phy5G = ap_conf.radios.radio.add(id=0, operating_frequency='FREQ_5GHZ')
   ap_conf_phy5G.config.id = 0
   ap_conf_phy5G.config.operating_frequency = 'FREQ_5GHZ'
   ap_conf_phy5G.config.enabled = True
@@ -67,12 +67,18 @@ def CreateConfigs():
   #ap_conf_phy2G.config.channel_width = 20
   #ap_conf_phy2G.config.dtp = False
   #ap_conf_phy2G.config.scanning = True
+  ## Interface configs
+  ap_conf_interface = ap_conf.interfaces.interface.add('Gi0/0')
+  ap_conf_vlan_map = ap_conf_interface.ethernet.switched_vlan.dot1x_vlan_map.vlan_name.add('Corp-VLAN')
+  ap_conf_vlan_map.config.vlan_name = 'Corp-VLAN'
+  ap_conf_vlan_map.config.id = 260
   ## Add MAC config
-  #ap_conf_company_a = ap_conf.ssids.ssid.add('Auth-Link022')
-  #ap_conf_company_a.config.enabled = True
-  #ap_conf_company_a.config.name = 'Auth-Link022'
+  ap_conf_company_a = ap_conf.ssids.ssid.add('test-ssid1')
+  ap_conf_company_a.config.enabled = True
+  ap_conf_company_a.config.name = 'test-ssid1'
   #ap_conf_company_a.config.hidden = False
-  #ap_conf_company_a.config.vlan_id = 250
+  ap_conf_company_a.config.default_vlan = 200
+  ap_conf_company_a.config.vlan_list = [200, 260, 270]
   #ap_conf_company_a.config.operating_frequency = 'FREQ_5GHZ'
   #ap_conf_company_a.config.basic_data_rates = ['RATE_36MB', 'RATE_48MB', 'RATE_54MB']
   #ap_conf_company_a.config.supported_data_rates = ['RATE_36MB', 'RATE_48MB', 'RATE_54MB']

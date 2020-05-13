@@ -7,13 +7,8 @@ import argparse
 import time
 import datetime
 import pychromecast
-import http.server
-import socketserver
 import sys
-import threading
 
-IP_ADDR = '192.168.0.12'  # Replace w/ your hosts IP.
-MP3_1 = 'sample_sound.mp3'  # Replace with your own MP3s.
 
 def _create_parser():
   """Create parser for arguments passed into the program from the CLI.

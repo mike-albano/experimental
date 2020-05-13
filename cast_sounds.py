@@ -31,23 +31,12 @@ def _create_parser():
                       required=True)
   parser.add_argument('-c', '--cast_name', type=str, help='Name of the Cast device'
                       'to play on. Can be speaker-group as well', required=True)
-  parser.add_argument('-s', '--serve', help='Run a local webserver for'
-                      'serving up MP3 files.', action='store_true')
   parser.add_argument('-v', '--volume', type=str, help='Cast Volume for playing (0..1)',
                       required=False)
   parser.add_argument('-rv', '--return_volume', type=str, help='Cast Volume to'
                       'set the device(s) back to after playing (0..1)', required=False)
 
   return parser
-
-
-def start_webserver():
-  """Starts a simple webserver on localhost."""
-  port = 80
-  handler = http.server.SimpleHTTPRequestHandler
-  httpd = socketserver.TCPServer(("", port), handler)
-  print("serving at port:" + str(port) + '\nCtrl-c to quit.')
-  httpd.serve_forever()
 
 
 def cast_mp3(chromecasts, target_device, mp3_url, initial_volume, return_volume):
@@ -57,9 +46,9 @@ def cast_mp3(chromecasts, target_device, mp3_url, initial_volume, return_volume)
   if initial_volume:
     print('setting initial volume.')
     cast.set_volume(1)  # Set volume to Max (1)
-  time.sleep(2)
+    time.sleep(2)
   cast.media_controller.play_media(mp3_url, 'audio/mp3')
-  #time.sleep(5)
+  time.sleep(5)  # Ensure cast devices connect.
   if return_volume:
     print('setting return volume.')
     cast.set_volume(.5)  # Set volume to middle.
@@ -75,13 +64,9 @@ def main():
   cast_name = args['cast_name']
   initial_volume = args['volume']
   return_volume = args['return_volume']
-  #serve = args['serve']
-  if args['serve']:  # Start a local webserver for serving MP3s
-    threading.Thread(target=start_webserver).start()
   chromecasts = pychromecast.get_chromecasts()
   cast = cast_mp3(chromecasts, cast_name, mp3_url, initial_volume, return_volume)
   if cast.media_controller.status.player_state == 'IDLE':
-    # Kill the thread
     cast.quit_app()
     sys.exit()
 

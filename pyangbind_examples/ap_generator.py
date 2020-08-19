@@ -20,6 +20,12 @@ def main():
 
 def CreateConfigs():
   ap_conf = configs.access_points.access_point.add('tester-01.example.net')
+  # Interfaces and vlan-map
+  ap_conf_int = ap_conf.interfaces.interface.add('eth0')
+  ap_conf_int.config.name = 'eth0'
+  ap_conf_eth = ap_conf_int.ethernet.switched_vlan.dot1x_vlan_map.vlan_name.add('Corp')
+  ap_conf_eth.config.vlan_name = 'Corp'
+  ap_conf_eth.config.id = 200
   ## 5GHz Radio
   ap_conf_phy5G = ap_conf.radios.radio.add(id=0, operating_frequency='FREQ_5GHZ')
   ap_conf_phy5G.config.id = 0

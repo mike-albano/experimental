@@ -32,7 +32,7 @@ def _send_msg(message):
 
 def _find_diff(a_record):
   """Find the difference between existing & new A records."""
-  new_list = pydig.query('redirector.online.spectraguard.net', 'A')
+  new_list = pydig.query(a_record, 'A')
   ips_removed = set(CURRENT_LIST) - set(new_list)
   ips_added = set(new_list) - set(CURRENT_LIST)
   if ips_removed:
